@@ -6,7 +6,7 @@ import sys
 from base import write_line, BaseHandler, PMTriggeredBot, CommentTriggeredBot
 
 FULL_EMOTE_REGEX = re.compile('\[[^\[\]\(\)/]*\]\(/[^\[\]\(\)/]*\)')
-EMOTE_REGEX = re.compile('/[a-zA-Z0-9]+')
+EMOTE_REGEX = re.compile('/[a-zA-Z0-9_]+')
 
 BEST_SHIP_KEYS = [
     'best ship',
@@ -83,7 +83,7 @@ class TopEmotesHandler(BaseHandler):
         reply_msg_header = 'Your emote counts:\n\n' \
                            'Emote | Count\n' \
                            ':--:|:--:\n'
-                    
+
         reply_msg_sig = '---\n' \
                         '[](/scootacheer) ^Report ^all ^problems ^to ^/u/LunarMist2 ^| ^[Source](https://github.com/JeremySimpson/redditbot)'
 

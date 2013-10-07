@@ -115,6 +115,19 @@ class PMTriggeredBot(Bot):
     def _get_content(self):
         return self.bot.get_unread()
 
+    def _extra_check(self, message):
+        # Ensure it was a PM
+        if message.was_comment:
+            write_line('Skipping comment with text ' + message.body.split('\n')[0] + '...Reason: not a PM')
+            return False
+
+        # Ensure I have not already replied
+        if message.first_message is not None:
+            write_line('Skipping comment with text ' + message.body.split('\n')[0] + '...Reason: not the first message in thread')
+            return False
+
+        return True
+
 
 class CommentTriggeredBot(Bot):
     def __init__(self, subreddit, fetch_limit=200, *args, **kwargs):

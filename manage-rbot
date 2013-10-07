@@ -33,10 +33,12 @@ stop() {
 status() {
     for bot in $BOTS; do
         rslt=$(ps aux | grep "python $BOT_PATH/bot.py $bot" | grep -v grep | wc -l)
-        if [ "$rslt" == "1" ]; then
+        if [ "$rslt" == "0" ]; then
+            echo -e "$bot\t${RED}stopped${NC}"
+        elif [ "$rslt" == "1" ]; then
             echo -e "$bot\t${GREEN}running${NC}"
         else
-            echo -e "$bot\t${RED}stopped${NC}"
+            echo -e "$bot\t${RED}multiple running!!!!--${NC}"
         fi
     done
 }
@@ -77,7 +79,7 @@ case "$1" in
        tail
        ;;
    *)
-       echo "Usage: $0 start|stop|restart|clean|status|tail [botname]}"
+       echo "Usage: $0 start|stop|restart|clean|status|tail [botname]"
        exit 1
  
 esac
