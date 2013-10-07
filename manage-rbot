@@ -1,0 +1,85 @@
+#!/bin/bash
+
+BOTS="top_emotes best_ship"
+LOG_PATH="/root/bot/logs"
+BOT_PATH="/root/bot"
+
+RED='\e[0;31m'
+GREEN='\e[0;32m'
+NC='\e[0m'
+
+if [ -n "$2" ];then
+    BOTS="$2"
+fi
+
+start() {
+    for bot in $BOTS; do
+        rslt=$(ps aux | grep "python $BOT_PATH/bot.py $bot" | grep -v grep | wc -l)
+        if [ "$rslt" == 0 ]; then
+            echo "Started $bot"
+            nohup python $BOT_PATH/bot.py $bot > $LOG_PATH/$bot.log &
+        else
+            echo "$bot already running"
+        fi
+    done
+}
+
+stop() {
+    for bot in $BOTS; do
+        pkill -f $bot
+    done
+}
+
+status() {
+    for bot in $BOTS; do
+        rslt=$(ps aux | grep "python $BOT_PATH/bot.py $bot" | grep -v grep | wc -l)
+        if [ "$rslt" == "1" ]; then
+            echo -e "$bot\t${GREEN}running${NC}"
+        else
+            echo -e "$bot\t${RED}stopped${NC}"
+        fi
+    done
+}
+
+clean() {
+    for bot in $BOTS; do
+        rm $LOG_PATH/$bot.log &> /dev/null && echo "Deleted $bot.log"
+    done
+}
+
+tail() {
+    builder="/usr/bin/tail"
+    for bot in $BOTS; do
+        builder="$builder -f $LOG_PATH/$bot.log"
+    done
+    exec $builder
+}
+
+case "$1" in
+ 
+   start)
+       start
+       ;;
+   stop)
+       stop
+       ;;
+   restart|reload|force-reload)
+       stop
+       start
+       ;;
+   clean)
+       clean
+       ;;
+   status)
+       status
+       ;;
+   tail)
+       tail
+       ;;
+   *)
+       echo "Usage: $0 start|stop|restart|clean|status|tail [botname]}"
+       exit 1
+ 
+esac
+ 
+exit 0
