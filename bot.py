@@ -66,7 +66,7 @@ class TopEmotesHandler(BaseHandler):
                 for match in matches:
                     emote = re.search(EMOTE_REGEX, match)
                     if emote:
-                        emotes_dict[emote.group(0)] += 1
+                        emotes_dict[emote.group(0).lower()] += 1
 
         # Remove [](/sp)
         if '/sp' in emotes_dict:
@@ -77,27 +77,34 @@ class TopEmotesHandler(BaseHandler):
             del emotes_dict['/spoiler']
 
         # Sort and reverse
-        sorted_emotes = reversed(sorted(emotes_dict.iteritems(), key=operator.itemgetter(1)))
+        sorted_emotes = list(reversed(sorted(emotes_dict.iteritems(), key=operator.itemgetter(1))))
 
         # Build the reply message
-        reply_msg_header = 'Your emote counts:\n\n' \
-                           'Emote | Count\n' \
-                           ':--:|:--:\n'
-
-        reply_msg_sig = '---\n' \
+        if len(sorted_emotes) == 0:
+            reply_msg = "[](/rdcry) You haven't yet used any emotes. You should use them.\n" \
+                        '[](/sp)\n' \
+                        '\n---\n' \
                         '[](/scootacheer) ^Report ^all ^problems ^to ^/u/LunarMist2 ^| ^[Source](https://github.com/JeremySimpson/redditbot)'
+        else:
+            reply_msg_header = 'Your emote counts:\n\n' \
+                               'Emote | Count\n' \
+                               ':--:|:--:\n'
 
-        table_content = ''
-        for emote, count in sorted_emotes:
-            tr = '{emote}|{count}\n'.format(emote=emote, count=count)
-            if len(reply_msg_header) + len(table_content) + len(tr) + len(reply_msg_sig) >= MAX_MESSAGE_LENGTH:
-                break
-            else:
-                table_content += tr
+            reply_msg_sig = '\n---\n' \
+                            '[](/scootacheer) ^Report ^all ^problems ^to ^/u/LunarMist2 ^| ^[Source](https://github.com/JeremySimpson/redditbot)'
 
-        # Reply to the user and mark it as read
-        try:
+            table_content = ''
+            for emote, count in sorted_emotes:
+                tr = '{emote}|{count}\n'.format(emote=emote, count=count)
+                if len(reply_msg_header) + len(table_content) + len(tr) + len(reply_msg_sig) >= MAX_MESSAGE_LENGTH:
+                    break
+                else:
+                    table_content += tr
+            
             reply_msg = reply_msg_header + table_content + reply_msg_sig
+            
+        # Reply to the user and mark it as read
+        try:            
             mail.reply(reply_msg)
             mail.mark_as_read()
             #write_line(reply_msg)
