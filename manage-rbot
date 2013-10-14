@@ -1,8 +1,8 @@
 #!/bin/bash
 
-BOTS="top_emotes best_ship"
+BOTS="top_emotes best_ship xkcd_transcriber_s xkcd_transcriber_c"
 LOG_PATH="/root/bot/logs"
-BOT_PATH="/root/bot"
+BOT_PATH="/root/bot/bot.py"
 
 RED='\e[0;31m'
 GREEN='\e[0;32m'
@@ -14,10 +14,10 @@ fi
 
 start() {
     for bot in $BOTS; do
-        rslt=$(ps aux | grep "python $BOT_PATH/bot.py $bot" | grep -v grep | wc -l)
+        rslt=$(ps aux | grep "python $BOT_PATH $bot" | grep -v grep | wc -l)
         if [ "$rslt" == 0 ]; then
             echo "Started $bot"
-            nohup python $BOT_PATH/bot.py $bot > $LOG_PATH/$bot.log &
+            nohup python $BOT_PATH $bot > $LOG_PATH/$bot.log &
         else
             echo "$bot already running"
         fi
@@ -32,7 +32,7 @@ stop() {
 
 status() {
     for bot in $BOTS; do
-        rslt=$(ps aux | grep "python $BOT_PATH/bot.py $bot" | grep -v grep | wc -l)
+        rslt=$(ps aux | grep "python $BOT_PATH $bot" | grep -v grep | wc -l)
         if [ "$rslt" == "0" ]; then
             echo -e "$bot\t${RED}stopped${NC}"
         elif [ "$rslt" == "1" ]; then
