@@ -5,6 +5,8 @@ import traceback
 
 import praw
 
+from datastore import BotDataStore
+
 
 def write_line(out_str):
     sys.stdout.write(str(out_str))
@@ -95,6 +97,7 @@ class LRUCache(OrderedDict):
 class Bot(object):
     def __init__(self, user_agent, username, password, delay, fetch_limit, cache_size=None, retry_limit=10):
         self.bot = RedditAPI(user_agent, username, password)
+        self.data_store = BotDataStore(username)
         self.delay = delay
         self.fetch_limit = fetch_limit
         self.use_cache = cache_size > 0
@@ -196,6 +199,11 @@ class PMTriggeredBot(Bot):
             message.mark_as_read()
             return False
 
+        # Ensure I can respond to the user
+        if message.author and message.author.name.lower() in self.data_store.get_ignores():
+            write_line('Skipping message {id}. Reason: Author on ignore list.'.format(id=message.id))
+            return False
+
         return True
 
 
@@ -221,6 +229,11 @@ class CommentTriggeredBot(Bot):
                     write_line('Skipping comment {id}. Reason: Already replied.'.format(id=comment.id))
                     return False
 
+        # Ensure I can respond to the user
+        if comment.author and comment.author.name.lower() in self.data_store.get_ignores():
+            write_line('Skipping comment {id}. Reason: Author on ignore list.'.format(id=comment.id))
+            return False
+
         return True
 
 
@@ -241,5 +254,10 @@ class SubmissionTriggeredBot(Bot):
                 if comment.author and comment.author.name == self.bot.username:
                     write_line('Skipping submission {id}. Reason: Already replied.'.format(id=submission.id))
                     return False
+
+        # Ensure I can respond to the user
+        if submission.author and submission.author.name.lower() in self.data_store.get_ignores():
+            write_line('Skipping submission {id}. Reason: Author on ignore list.'.format(id=submission.id))
+            return False
 
         return True
