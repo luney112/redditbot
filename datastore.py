@@ -45,6 +45,13 @@ class BotDataStore(object):
                );
             """)
 
+        self.data_store.execute("""
+            CREATE TABLE xkcd_counter (
+                id INTEGER NOT NULL PRIMARY KEY,
+                count INTEGER
+                );
+            """)
+
         self.data_store.commit()
 
     def add_ignore(self, target):
@@ -62,3 +69,16 @@ class BotDataStore(object):
         )
 
         return [r[0] for r in cursor]
+
+    def increment_xkcd_count(self, comic_id):
+        self.data_store.execute(
+            'INSERT OR IGNORE INTO xkcd_counter VALUES(?, 0);',
+            (int(comic_id),)
+        )
+
+        self.data_store.execute(
+            'UPDATE xkcd_counter SET count = count + 1 WHERE id = ?',
+            (int(comic_id),)
+        )
+
+        self.data_store.commit()

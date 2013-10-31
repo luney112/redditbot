@@ -2,7 +2,6 @@ from collections import defaultdict
 import operator
 import random
 import re
-import sys
 import urllib2
 from urlparse import urlparse
 
@@ -54,7 +53,6 @@ BEST_SHIP_IMAGES = [
     'http://th06.deviantart.net/fs70/PRE/i/2011/281/6/4/sunddenly__raibow_dash_by_nyuuchandiannepie-d4c5vfx.jpg',
 ]
 
-PONY_SUBS = 'mylittlepony+mlplounge+ploungeafterdark+cloudchasermotes'
 MAX_MESSAGE_LENGTH = 10000
 
 
@@ -191,7 +189,7 @@ class XkcdFetcher(object):
             html = response.read()
             j = json.loads(html)
             return j['query']['pages'].values()[0]['revisions'][0]['*']
-        except Exception as e:
+        except:
             return None
 
     def get_explained_link(self, comic_id):
@@ -205,7 +203,7 @@ class XkcdFetcher(object):
             response = urllib2.urlopen(XKCD_JSON_API_URL.format(comic_id=comic_id))
             html = response.read()
             return json.loads(html)
-        except Exception as e:
+        except:
             return None
 
     def _get_new_reverse_entries(self):
@@ -240,6 +238,9 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
         if not data:
             write_line(' => Data could not be fetched for {url}'.format(url=submission.url))
             return True
+
+        if data.get('num'):
+            self.data_store.increment_xkcd_count(data.get('num'))
 
         if data.get('transcript', '') == '':
             write_line(' => Skipping...transcript is blank.')
@@ -307,6 +308,9 @@ class CommentXkcdBot(CommentTriggeredBot):
         for url in urls:
             data = self.xkcd.get_json(url)
             if data and data.get('num') not in comics_parsed:
+                if data.get('num'):
+                    self.data_store.increment_xkcd_count(data.get('num'))
+
                 if reply_msg_body != '':
                     reply_msg_body += '----\n'
 
@@ -347,52 +351,3 @@ class CommentXkcdBot(CommentTriggeredBot):
     def _get_urls(self, text):
         all = re.findall(XKCD_URL_REGEX, text)
         return [t[0] for t in all]
-
-
-if __name__ == '__main__':
-    counts_emotes_handler = TopEmotesBot(user_agent='Emote counter by ----',
-                                         username='----',
-                                         password='----',
-                                         delay=30,
-                                         fetch_limit=None,
-                                         cache_size=None)
-
-    best_ship_handler = BestShipBot(user_agent='Best Ship Bot by ----',
-                                    username='----',
-                                    password='----',
-                                    subreddit=PONY_SUBS,
-                                    delay=30,
-                                    fetch_limit=60,
-                                    cache_size=120)
-
-    xkcd_transcriber_handler_s = SubmissionXkcdBot(user_agent='xkcd transcriber Bot by ----',
-                                                   username='----',
-                                                   password='----',
-                                                   subreddit='all',
-                                                   delay=30,
-                                                   fetch_limit=200,
-                                                   cache_size=400)
-
-    xkcd_transcriber_handler_c = CommentXkcdBot(user_agent='xkcd transcriber Bot by ----',
-                                                username='----',
-                                                password='----',
-                                                subreddit='all',
-                                                delay=30,
-                                                fetch_limit=None,
-                                                cache_size=2000)
-
-    bots = {
-        'top_emotes': counts_emotes_handler,
-        'best_ship': best_ship_handler,
-        'xkcd_transcriber_s': xkcd_transcriber_handler_s,
-        'xkcd_transcriber_c': xkcd_transcriber_handler_c,
-    }
-
-    if len(sys.argv) != 2 or sys.argv[1] not in bots:
-        print 'Usage:', sys.argv[0], 'botname'
-        print 'Bot names:'
-        for bot_name in sorted(bots.keys()):
-            print '    ', bot_name
-    else:
-        bot = bots[sys.argv[1]]
-        bot.run()

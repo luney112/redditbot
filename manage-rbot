@@ -2,7 +2,7 @@
 
 BOTS="top_emotes best_ship xkcd_transcriber_s xkcd_transcriber_c"
 LOG_PATH="/home/jeremy/bot/logs"
-BOT_PATH="/home/jeremy/bot/bot.py"
+BOT_PATH="/home/jeremy/bot/start.py"
 
 RED='\e[0;31m'
 GREEN='\e[0;32m'
