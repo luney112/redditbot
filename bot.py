@@ -247,7 +247,8 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
             return True
 
         reply_msg_body = ''
-        reply_msg_sig = ''
+        reply_msg_sig = '\n\n---\n' \
+                        '^[Questions|Stats|Problems](http://www.reddit.com/r/xkcd_transcriber/)'
 
         if data.get('img'):
             reply_msg_body += '[Image]({image})\n\n'.format(image=data.get('img'))
@@ -263,6 +264,9 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
         explained = self.xkcd.get_explained_link(data.get('num'))
         if explained:
             reply_msg_body += '[Comic Explanation]({link})\n\n'.format(link=explained)
+        stats = self.data_store.get_stats(data.get('num'))
+        if stats:
+            reply_msg_body += '**Stats:** This comic has been referenced {0} time(s), representing {1}% of referenced xkcds.'.format(stats[0], stats[1])
 
         reply_msg = reply_msg_body.strip() + reply_msg_sig
 
@@ -300,7 +304,8 @@ class CommentXkcdBot(CommentTriggeredBot):
             write_line(' => Skipping..was a false positive.')
             return True
 
-        reply_msg_sig = ''
+        reply_msg_sig = '\n\n---\n' \
+                        '^[Questions|Stats|Problems](http://www.reddit.com/r/xkcd_transcriber/)'
         reply_msg_body = ''
         comics_parsed = set()
 
@@ -326,6 +331,9 @@ class CommentXkcdBot(CommentTriggeredBot):
                 explained = self.xkcd.get_explained_link(data.get('num'))
                 if explained:
                     reply_msg_body += '[Comic Explanation]({link})\n\n'.format(link=explained)
+                stats = self.data_store.get_stats(data.get('num'))
+                if stats:
+                    reply_msg_body += '**Stats:** This comic has been referenced {0} time(s), representing {1}% of referenced xkcds.'.format(stats[0], stats[1])
 
                 comics_parsed.add(data.get('num'))
 
