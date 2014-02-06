@@ -1,44 +1,38 @@
 import sys
-from bot import TopEmotesBot, BestShipBot, SubmissionXkcdBot, CommentXkcdBot
 
-PONY_SUBS = 'mylittlepony+mlplounge+ploungeafterdark+cloudchasermotes'
-
+from bot import TopEmotesBot, SubmissionXkcdBot, CommentXkcdBot
+import settings
 
 if __name__ == '__main__':
-    counts_emotes_handler = TopEmotesBot(user_agent='Emote counter by /u/-----',
-                                         username='----',
-                                         password='----',
-                                         delay=30,
-                                         fetch_limit=None,
-                                         cache_size=None)
+    def counts_emotes_handler():
+        return TopEmotesBot(user_agent='Emote counter by %s' % settings.AUTHOR,
+                            username='counts_your_emotes',
+                            password=settings.REDDIT_ACCOUNTS['counts_your_emotes'],
+                            delay=30,
+                            fetch_limit=None,
+                            cache_size=None)
 
-    best_ship_handler = BestShipBot(user_agent='Best Ship Bot by /u/----',
-                                    username='----',
-                                    password='----',
-                                    subreddit=PONY_SUBS,
-                                    delay=30,
-                                    fetch_limit=60,
-                                    cache_size=120)
+    def xkcd_transcriber_handler_s():
+        return SubmissionXkcdBot(user_agent='xkcd transcriber Bot by %s' % settings.AUTHOR,
+                                 username='xkcd_transcriber',
+                                 password=settings.REDDIT_ACCOUNTS['xkcd_transcriber'],
+                                 subreddit='all',
+                                 delay=30,
+                                 fetch_limit=200,
+                                 cache_size=400)
 
-    xkcd_transcriber_handler_s = SubmissionXkcdBot(user_agent='xkcd transcriber Bot by /u/----',
-                                                   username='----',
-                                                   password='----',
-                                                   subreddit='all',
-                                                   delay=30,
-                                                   fetch_limit=200,
-                                                   cache_size=400)
-
-    xkcd_transcriber_handler_c = CommentXkcdBot(user_agent='xkcd transcriber Bot by /u/----',
-                                                username='----',
-                                                password='----',
-                                                subreddit='all',
-                                                delay=30,
-                                                fetch_limit=None,
-                                                cache_size=2000)
+    def xkcd_transcriber_handler_c():
+        return CommentXkcdBot(user_agent='xkcd transcriber Bot by %s' % settings.AUTHOR,
+                              username='xkcd_transcriber',
+                              password=settings.REDDIT_ACCOUNTS['xkcd_transcriber'],
+                              subreddit='all',
+                              delay=20,
+                              fetch_limit=None,
+                              cache_size=2000,
+                              thread_limit=0)
 
     bots = {
         'top_emotes': counts_emotes_handler,
-        'best_ship': best_ship_handler,
         'xkcd_transcriber_s': xkcd_transcriber_handler_s,
         'xkcd_transcriber_c': xkcd_transcriber_handler_c,
     }
@@ -49,5 +43,5 @@ if __name__ == '__main__':
         for bot_name in sorted(bots.keys()):
             print '    ', bot_name
     else:
-        bot = bots[sys.argv[1]]
+        bot = bots[sys.argv[1]]()
         bot.run()

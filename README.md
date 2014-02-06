@@ -9,14 +9,18 @@ Supports:
  - Submission-triggered bots
 
 Included bots:
- - Best ship bot (triggered via comments)
  - Emote counter (triggered through PMs)
  - XKCD transcriber (trigged via submission and comments)
+
+Requires:
+ python 2.7, praw, simplejson, ImageHash (0.3)
+
 
 ----
 
 Notes:
  - Uses praw to access reddit's data.
+ - The xkcd bot also supports references of images that were uploaded to imgur. It compares image hashes to find possible references.
 
 ---
 

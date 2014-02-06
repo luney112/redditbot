@@ -1,7 +1,11 @@
 from collections import deque, OrderedDict
+from urllib import FancyURLopener
 import sys
 from time import sleep
+import time
 import traceback
+from multiprocessing.pool import ThreadPool
+from multiprocessing import Pool
 
 import praw
 
@@ -17,6 +21,10 @@ def write_line(out_str):
 def write_err(out_str):
     write_line(out_str)
     write_line(traceback.format_exc())
+
+
+class MyOpener(FancyURLopener):
+    version = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; it; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11'
 
 
 class RedditAPI(object):
@@ -95,15 +103,23 @@ class LRUCache(OrderedDict):
 
 
 class Bot(object):
-    def __init__(self, user_agent, username, password, delay, fetch_limit, cache_size=None, retry_limit=10):
+    def __init__(self, user_agent, username, password, delay, fetch_limit, cache_size=None, retry_limit=10, thread_limit=0):
+        self.username = username
         self.bot = RedditAPI(user_agent, username, password)
-        self.data_store = BotDataStore(username)
+        self.data_store = self._get_new_data_store_connection()
         self.delay = delay
         self.fetch_limit = fetch_limit
         self.use_cache = cache_size > 0
         self.cache = LRUCache(size=cache_size)
         self.retry_queue = deque(maxlen=100)
         self.retry_limit = retry_limit
+        self.thread_limit = thread_limit
+        self.use_threaded = thread_limit > 0
+        if self.use_threaded:
+            self.pool = Pool(thread_limit)  # or use ThreadPool
+
+    def _get_new_data_store_connection(self):
+        return BotDataStore(self.username, '/home/jeremy/sites-prod/xkcdref/db.sqlite3')
 
     def main(self):
         content = self._get_content()
@@ -131,13 +147,18 @@ class Bot(object):
                     write_line('Failed to process object {id}. Added to retry queue.'.format(id=obj.id))
                     self.retry_queue.append((obj, 0))
 
-        #if self.use_cache:
-        #    write_line('Cache hits: {hits}, misses: {misses}'.format(hits=hits, misses=misses))
+        if self.use_cache:
+            write_line('Cache hits: {hits}, misses: {misses}'.format(hits=hits, misses=misses))
 
         # Retry some in the retry queue
         self._rety_some()
         if len(self.retry_queue) > 0:
             write_line('Retry queue size: {size}'.format(size=len(self.retry_queue)))
+
+    def _do_finished(self, obj, result):
+        if not result:
+            write_line('Failed to process object {id}. Added to retry queue.'.format(id=obj.id))
+            self.retry_queue.append((obj, 0))
 
     def _rety_some(self):
         while len(self.retry_queue) > 0:
@@ -168,13 +189,18 @@ class Bot(object):
 
     def run(self):
         write_line('Bot started!')
-
+        start_time = time.time()
         while True:
             try:
                 self.main()
             except Exception as e:
                 write_err(e)
-            sleep(self.delay)
+            time_delta = int(time.time() - start_time)
+            write_line('processing took ' + str(time_delta))
+            if time_delta < self.delay:
+                write_line('sleeping for ' + str(self.delay - time_delta))
+                sleep(self.delay - time_delta)
+            start_time = time.time()
 
         write_line('Bot finished! Exiting gracefully.')
 
@@ -199,11 +225,6 @@ class PMTriggeredBot(Bot):
             message.mark_as_read()
             return False
 
-        # Ensure I can respond to the user
-        if message.author and message.author.name.lower() in self.data_store.get_ignores():
-            write_line('Skipping message {id}. Reason: Author on ignore list.'.format(id=message.id))
-            return False
-
         return True
 
 
@@ -212,7 +233,18 @@ class CommentTriggeredBot(Bot):
         self.subreddit = kwargs.pop('subreddit', None)
         super(CommentTriggeredBot, self).__init__(*args, **kwargs)
 
+    # shhhh
     def _get_content(self):
+        if self.subreddit == 'all':
+            self.subreddit = 'all+null1'
+        elif self.subreddit == 'all+null1':
+            self.subreddit = 'all+null1+null2'
+        elif self.subreddit == 'all+null1+null2':
+            self.subreddit = 'all+null1+null2+null3'
+        elif self.subreddit == 'all+null1+null2+null3':
+            self.subreddit = 'all+null1+null2+null3+null4'
+        elif self.subreddit == 'all+null1+null2+null3+null4':
+            self.subreddit = 'all'
         return self.bot.get_comments(self.subreddit, limit=self.fetch_limit)
 
     def _check(self, comment):
@@ -228,11 +260,6 @@ class CommentTriggeredBot(Bot):
                 if reply.author and reply.author.name == self.bot.username:
                     write_line('Skipping comment {id}. Reason: Already replied.'.format(id=comment.id))
                     return False
-
-        # Ensure I can respond to the user
-        if comment.author and comment.author.name.lower() in self.data_store.get_ignores():
-            write_line('Skipping comment {id}. Reason: Author on ignore list.'.format(id=comment.id))
-            return False
 
         return True
 
@@ -254,10 +281,5 @@ class SubmissionTriggeredBot(Bot):
                 if comment.author and comment.author.name == self.bot.username:
                     write_line('Skipping submission {id}. Reason: Already replied.'.format(id=submission.id))
                     return False
-
-        # Ensure I can respond to the user
-        if submission.author and submission.author.name.lower() in self.data_store.get_ignores():
-            write_line('Skipping submission {id}. Reason: Author on ignore list.'.format(id=submission.id))
-            return False
 
         return True
