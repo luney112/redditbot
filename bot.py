@@ -29,6 +29,8 @@ XKCD_EXPLAINED_URL = 'http://www.explainxkcd.com/wiki/index.php?title={comic_id}
 XKCD_JSON_API_URL = 'http://xkcd.com/{comic_id}/info.0.json'
 IMGUR_JSON_API_URL = 'https://api.imgur.com/3/image/{image_id}.json'
 
+REDDIT_PM_IGNORE = "http://reddit.com/message/compose/?to=xkcd_transcriber&subject=ignore%20me&message=ignore%20me"
+
 MAX_MESSAGE_LENGTH = 10000
 
 
@@ -287,7 +289,7 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
 
         reply_msg_body = ''
         reply_msg_sig = '---\n' \
-                        '^[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/)'
+                        '^[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/) ^| ^[StopReplying](%s)' % REDDIT_PM_IGNORE
 
         if data.get('img'):
             reply_msg_body += u'[Image]({image})\n\n'.format(image=data.get('img').replace('(', '\\(').replace(')', '\\)'))
@@ -377,7 +379,7 @@ class CommentXkcdBot(CommentTriggeredBot):
 
     def _process_urls(self, comment, urls):
         reply_msg_sig = '---\n' \
-                        '^[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/)'
+                        '^[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/) ^| ^[StopReplying](%s)' % REDDIT_PM_IGNORE
         reply_msg_body = ''
         comics_parsed = set()
 
@@ -447,3 +449,29 @@ class CommentXkcdBot(CommentTriggeredBot):
         all2 = re.findall(IMGUR_URL_REGEX, text)
         urls = [t for t in all] + [t for t in all2]
         return urls
+
+
+class PMXkcdBot(PMTriggeredBot):
+    def __init__(self, *args, **kwargs):
+        super(PMXkcdBot, self).__init__(*args, **kwargs)
+
+    def _check(self, mail):
+        return PMTriggeredBot._check(self, mail)
+
+    def _do(self, mail):
+        if mail.body == "ignore me" and mail.author:
+            self.data_store.add_ignore(mail.author.name.lower())
+
+            # Reply to the user
+            try:
+                reply_msg = "You have been added to the ignore list. If this bot continues to respond, PM /u/LunarMist2."
+                self.bot.reply(mail.name, reply_msg)
+                mail.mark_as_read()
+                #write_line(reply_msg)
+                write_line(' => Reply Sent!')
+            except Exception as e:
+                write_line(' => Exception while replying in PMXkcdBot.')
+                write_err(e)
+                return False
+
+        return True

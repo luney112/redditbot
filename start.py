@@ -1,6 +1,6 @@
 import sys
 
-from bot import TopEmotesBot, SubmissionXkcdBot, CommentXkcdBot
+from bot import TopEmotesBot, SubmissionXkcdBot, CommentXkcdBot, PMXkcdBot
 import settings
 
 if __name__ == '__main__':
@@ -31,10 +31,19 @@ if __name__ == '__main__':
                               cache_size=2000,
                               thread_limit=0)
 
+    def xkcd_transcriber_handler_m():
+        return PMXkcdBot(user_agent='xkcd transcriber Bot (PM checker) by %s' % settings.AUTHOR,
+                         username='xkcd_transcriber',
+                         password=settings.REDDIT_ACCOUNTS['xkcd_transcriber'],
+                         delay=30,
+                         fetch_limit=None,
+                         cache_size=None)
+
     bots = {
         'top_emotes': counts_emotes_handler,
         'xkcd_transcriber_s': xkcd_transcriber_handler_s,
         'xkcd_transcriber_c': xkcd_transcriber_handler_c,
+        'xkcd_transcriber_m': xkcd_transcriber_handler_m,
     }
 
     if len(sys.argv) != 2 or sys.argv[1] not in bots:

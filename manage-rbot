@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BOTS="top_emotes xkcd_transcriber_s xkcd_transcriber_c"
+BOTS="top_emotes xkcd_transcriber_s xkcd_transcriber_c xkcd_transcriber_m"
 LOG_PATH="/home/jeremy/bot/logs"
 BOT_PATH="/home/jeremy/bot/start.py"
 

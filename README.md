@@ -10,7 +10,7 @@ Supports:
 
 Included bots:
  - Emote counter (triggered through PMs)
- - XKCD transcriber (trigged via submission and comments)
+ - XKCD transcriber (trigged via submission and comments, monitors PMs to add to ignore list)
 
 Requires:
  python 2.7, praw, simplejson, ImageHash (0.3)
