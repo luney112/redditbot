@@ -43,13 +43,6 @@ class BotDataStore(object):
             """)
 
         self.data_store.execute("""
-            CREATE TABLE IF NOT EXISTS stats_xkcd_counter (
-                id INTEGER NOT NULL PRIMARY KEY,
-                count INTEGER
-                );
-            """)
-
-        self.data_store.execute("""
             CREATE TABLE IF NOT EXISTS stats_xkcd_event (
                 id INTEGER NOT NULL,
                 time INTEGER NOT NULL,
@@ -74,12 +67,12 @@ class BotDataStore(object):
             CREATE VIEW IF NOT EXISTS stats_xkcd_stats AS
                 SELECT
                     comic_id,
-                    count,
-                    (count * 100.0) / (SELECT SUM(count) FROM stats_xkcd_counter) AS percentage
+                    COUNT(*) as count,
+                    (COUNT(*) * 100.0) / (SELECT COUNT(*) FROM stats_xkcd_event) AS percentage
                 FROM
-                    stats_xkcd_counter
-                ORDER BY
-                    percentage DESC
+                    stats_xkcd_event
+                GROUP BY
+                    comic_id
                 ;
             """)
 
@@ -113,25 +106,6 @@ class BotDataStore(object):
         self.data_store.execute(
             'INSERT INTO stats_xkcd_event VALUES(null, ?, ?, ?, ?, ?, ?)',
             (comic_id, time, subreddit, user, link, from_external)
-        )
-
-        self.data_store.commit()
-
-    def increment_xkcd_count(self, comic_id):
-        r = self.data_store.execute(
-            'SELECT 1 FROM stats_xkcd_counter WHERE comic_id = ?;',
-            (int(comic_id),)
-        )
-
-        if r.fetchone() is None:
-            self.data_store.execute(
-                'INSERT INTO stats_xkcd_counter VALUES(null, ?, 0);',
-                (int(comic_id),)
-            )
-
-        self.data_store.execute(
-            'UPDATE stats_xkcd_counter SET count = count + 1 WHERE comic_id = ?',
-            (int(comic_id),)
         )
 
         self.data_store.commit()

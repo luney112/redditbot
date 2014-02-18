@@ -33,6 +33,8 @@ REDDIT_PM_IGNORE = "http://reddit.com/message/compose/?to=xkcd_transcriber&subje
 
 MAX_MESSAGE_LENGTH = 10000
 
+PONY_SUBS = ["mylittlepony", "mlplounge", "ploungeafterdark", "mylittlefriends"]
+
 
 class TopEmotesBot(PMTriggeredBot):
     def __init__(self, *args, **kwargs):
@@ -276,7 +278,6 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
             return True
 
         if data.get('num'):
-            self.data_store.increment_xkcd_count(data.get('num'))
             timestamp = int(time.time())
             author = submission.author.name if submission.author else '[deleted]'
             sub = submission.subreddit.display_name
@@ -378,8 +379,12 @@ class CommentXkcdBot(CommentTriggeredBot):
             return self._process_urls(comment, urls)
 
     def _process_urls(self, comment, urls):
+        secret = ""
+        if comment.subreddit.display_name.lower() in PONY_SUBS:
+            secret = "[](/twibeam) "
+
         reply_msg_sig = '---\n' \
-                        '^[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/) ^| ^[StopReplying](%s)' % REDDIT_PM_IGNORE
+                        '^%s[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/) ^| ^[StopReplying](%s)' % (secret, REDDIT_PM_IGNORE)
         reply_msg_body = ''
         comics_parsed = set()
 
@@ -388,7 +393,6 @@ class CommentXkcdBot(CommentTriggeredBot):
             data = self.xkcd.get_json(url)
             if data and data.get('num') not in comics_parsed:
                 if data.get('num'):
-                    self.data_store.increment_xkcd_count(data.get('num'))
                     timestamp = int(time.time())
                     author = comment.author.name if comment.author else '[deleted]'
                     sub = comment.subreddit.display_name

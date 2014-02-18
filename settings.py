@@ -1,7 +1,0 @@
-IMGUR_AUTHORIZATION = ''
-
-REDDIT_ACCOUNTS = {
-
-}
-
-AUTHOR = ''
