@@ -308,7 +308,7 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
             reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
         stats = self.data_store.get_stats(data.get('num'))
         if stats:
-            reply_msg_body += u'**Stats:** This comic has been referenced {0} time(s), representing {1:.2f}% of referenced xkcds.\n\n'.format(stats[0], stats[1])
+            reply_msg_body += u'**Stats:** This comic has been referenced {0} time(s), representing {1:.4f}% of referenced xkcds.\n\n'.format(stats[0], stats[1])
 
         reply_msg = reply_msg_body + reply_msg_sig
 
@@ -416,7 +416,7 @@ class CommentXkcdBot(CommentTriggeredBot):
                     reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
                 stats = self.data_store.get_stats(data.get('num'))
                 if stats:
-                    reply_msg_body += u'**Stats:** This comic has been referenced {0} time(s), representing {1:.2f}% of referenced xkcds.\n\n'.format(stats[0], stats[1])
+                    reply_msg_body += u'**Stats:** This comic has been referenced {0} time(s), representing {1:.4f}% of referenced xkcds.\n\n'.format(stats[0], stats[1])
 
                 comics_parsed.add(data.get('num'))
 
