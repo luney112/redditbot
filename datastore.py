@@ -44,7 +44,8 @@ class BotDataStore(object):
 
         self.data_store.execute("""
             CREATE TABLE IF NOT EXISTS stats_xkcd_event (
-                id INTEGER NOT NULL,
+                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                comic_id INTEGER NOT NULL,
                 time INTEGER NOT NULL,
                 subreddit TEXT,
                 user TEXT,
