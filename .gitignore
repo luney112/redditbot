@@ -36,4 +36,3 @@ nosetests.xml
 
 # other
 .DS_Store
-settings.py
