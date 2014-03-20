@@ -30,10 +30,18 @@ XKCD_JSON_API_URL = 'http://xkcd.com/{comic_id}/info.0.json'
 IMGUR_JSON_API_URL = 'https://api.imgur.com/3/image/{image_id}.json'
 
 REDDIT_PM_IGNORE = "http://reddit.com/message/compose/?to=xkcd_transcriber&subject=ignore%20me&message=ignore%20me"
-
+NO_BREAK_SPACE = u'\u00A0'
 MAX_MESSAGE_LENGTH = 10000
 
 PONY_SUBS = ["mylittlepony", "mlplounge", "ploungeafterdark", "mylittlefriends"]
+
+XKCD_SIG_LINKS = [
+    u'[xkcd.com](http://www.xkcd.com)',
+    u'[xkcd%ssub](http://www.reddit.com/r/xkcdcomic/)/[kerfuffle](http://www.reddit.com/r/self/comments/1xdwba/the_history_of_the_rxkcd_kerfuffle/)' % NO_BREAK_SPACE,
+    u'[Problems/Bugs?](http://www.reddit.com/r/xkcd_transcriber/)',
+    u'[Statistics](http://xkcdref.info/statistics/)',
+    u'[Stop%sReplying](%s)' % (NO_BREAK_SPACE, REDDIT_PM_IGNORE),
+]
 
 
 class TopEmotesBot(PMTriggeredBot):
@@ -289,8 +297,7 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
             return True
 
         reply_msg_body = ''
-        reply_msg_sig = '---\n' \
-                        '^[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/) ^| ^[StopReplying](%s)' % REDDIT_PM_IGNORE
+        reply_msg_sig = '---\n' + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS])
 
         if data.get('img'):
             reply_msg_body += u'[Image]({image})\n\n'.format(image=data.get('img').replace('(', '\\(').replace(')', '\\)'))
@@ -314,7 +321,7 @@ class SubmissionXkcdBot(SubmissionTriggeredBot):
 
         # Reply to the user and mark it as read
         try:
-            self.bot.reply(submission.name, reply_msg.encode('utf-8'))
+            self.bot.reply(submission.name, reply_msg)
             #write_line(reply_msg)
             write_line(' => Reply Sent!')
         except Exception as e:
@@ -383,8 +390,7 @@ class CommentXkcdBot(CommentTriggeredBot):
         if comment.subreddit.display_name.lower() in PONY_SUBS:
             secret = "[](/twibeam) "
 
-        reply_msg_sig = '---\n' \
-                        '^%s[Questions/Problems](http://www.reddit.com/r/xkcd_transcriber/) ^| ^[Website](http://xkcdref.info/statistics/) ^| ^[StopReplying](%s)' % (secret, REDDIT_PM_IGNORE)
+        reply_msg_sig = '---\n' + secret + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS])
         reply_msg_body = ''
         comics_parsed = set()
 
@@ -438,7 +444,7 @@ class CommentXkcdBot(CommentTriggeredBot):
 
         # Reply to the user
         try:
-            self.bot.reply(message.name, reply_msg.encode('utf-8'))
+            self.bot.reply(message.name, reply_msg)
             #write_line(reply_msg)
             write_line(' => Reply Sent!')
         except Exception as e:
@@ -478,4 +484,5 @@ class PMXkcdBot(PMTriggeredBot):
                 write_err(e)
                 return False
 
+        mail.mark_as_read()
         return True
