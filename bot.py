@@ -422,7 +422,8 @@ class CommentXkcdBot(CommentTriggeredBot):
                     reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
                 stats = self.data_store.get_stats(data.get('num'))
                 if stats:
-                    reply_msg_body += u'**Stats:** This comic has been referenced {0} time(s), representing {1:.4f}% of referenced xkcds.\n\n'.format(stats[0], stats[1])
+                    plural = 's' if stats[0] != 1 else ''
+                    reply_msg_body += u'**Stats:** This comic has been referenced {0} time{1}, representing {2:.4f}% of referenced xkcds.\n\n'.format(stats[0], plural, stats[1])
 
                 comics_parsed.add(data.get('num'))
 
