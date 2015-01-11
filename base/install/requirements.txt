@@ -1,0 +1,4 @@
+gevent>=1.0.1
+praw>=2.1.19
+pylru>=1.0.6
+requests>=2.5.1
