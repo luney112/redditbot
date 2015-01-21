@@ -27,6 +27,17 @@ How-to:
 
 3. In v1, the built-in bot templates auto checked to ensure it doesn't reply twice. This functionality has been moved into the `utils` module, and needs to be called yourself.
 
+4. `MultiBotHandler` can be used to run multiple bots at the same time in a single python process.
+
+5. It is important that
+
+```
+# Must be first for monkey_patch()
+from redditbot.base import patch_all
+patch_all()
+```
+
+are the first lines that execute when the python process is started. These lines ensure that gevent's monkey patches are made correctly.
 
 ---
 
