@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 FULL_EMOTE_REGEX = re.compile(
     """\[[^\]]*\]\s*\(\s*/(?P<name>[^\s/]+?)(?P<modifier>-\S+)?\s*(?P<message>["'].*?["'])?\s*\)""")
 PONY_SUBS = ["mylittlepony", "mlplounge", "ploungeafterdark", "mylittlefriends", "mylittleandysonic1"]
-PONY_SECRETS = [u'[](/adorkable "%s")']
+PONY_SECRETS = [u'[](/adorkable "%s")', u'[](/twibook "%s")', u'[](/twicookiejar "%s")', u'[](/twicookie "%s")']
 
 REDDIT_PM_IGNORE = "http://reddit.com/message/compose/?to=xkcd_transcriber&subject=ignore%20me&message=ignore%20me"
 REDDIT_PM_DELETE = "http://reddit.com/message/compose/?to=xkcd_transcriber&subject=delete&message=delete%20{thing_id}"
