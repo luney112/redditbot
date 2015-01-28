@@ -189,7 +189,7 @@ class CommentXkcdBot(SubredditCommentTriggeredBot):
     def send_reply(self, comment, refs):
         # Check for secret message
         secret_message = ''
-        matches = re.findall(FULL_EMOTE_REGEX, comment.body)
+        matches = re.finditer(FULL_EMOTE_REGEX, comment.body)
         if matches:
             for match in matches:
                 d = match.groupdict()
@@ -343,7 +343,7 @@ class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
     def send_reply(self, submission, refs):
         # Check for secret message
         secret_message = ''
-        matches = re.findall(FULL_EMOTE_REGEX, getattr(submission, 'selftext', ''))
+        matches = re.finditer(FULL_EMOTE_REGEX, getattr(submission, 'selftext', ''))
         if matches:
             for match in matches:
                 d = match.groupdict()
