@@ -92,3 +92,12 @@ def has_chain(praw_r, praw_comment, username):
     if not parent or type(parent) != praw.objects.Comment:
         return False
     return is_comment_owner(parent, username)
+
+
+def is_transcript_reply(praw_r, praw_comment, username):
+    if not hasattr(praw_comment, 'parent_id'):
+        return False
+    parent = praw_r.get_info(thing_id=praw_comment.parent_id)
+    if not parent or type(parent) != praw.objects.Comment:
+        return False
+    return len(parent.body) > 50 and is_comment_owner(parent, username)

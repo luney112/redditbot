@@ -107,6 +107,11 @@ class MailXkcdBot(MailTriggeredBot):
             logger.info('Skipping mail {id}. Reason: Author on ignore list.'.format(id=mail.id))
             return True
 
+        # Check it was originally a reply to a transcript
+        if not utils.is_transcript_reply(self.r, mail, self.auth['username']):
+            logger.info('Skipping to post joke reply to {id}. Reason: Not a reply to a transcript'.format(id=mail.id))
+            return True
+
         # Reply to the user
         if utils.send_reply(mail, reply_msg):
             return True
