@@ -1,4 +1,5 @@
 import logging
+import urllib2
 
 import praw
 
@@ -58,6 +59,12 @@ def send_reply(praw_object, reply_msg):
             reply_obj = praw_object.add_comment(reply_msg)
         else:
             reply_obj = praw_object.reply(reply_msg)
+    except urllib2.HTTPError as e:
+        if e.code == 403:
+            logger.error('Could not post reply: Forbidden')
+            return None
+        else:
+            raise
     except Exception as e:
         logger.exception('Exception while replying')
         return None
