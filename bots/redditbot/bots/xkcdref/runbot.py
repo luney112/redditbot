@@ -10,7 +10,7 @@ from bot import SubmissionXkcdBot, CommentXkcdBot, MailXkcdBot, VoteXkcdBot
 from datastore import BotDataStore
 from xkcdfetcher import XkcdFetcher
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 
 
 def run():

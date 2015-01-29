@@ -1,7 +1,7 @@
 import logging
-import urllib2
 
 import praw
+import requests
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -59,8 +59,8 @@ def send_reply(praw_object, reply_msg):
             reply_obj = praw_object.add_comment(reply_msg)
         else:
             reply_obj = praw_object.reply(reply_msg)
-    except urllib2.HTTPError as e:
-        if e.code == 403:
+    except requests.HTTPError as e:
+        if e.response.status_code == 403:
             logger.error('Could not post reply: Forbidden')
             return None
         else:
@@ -99,12 +99,3 @@ def has_chain(praw_r, praw_comment, username):
     if not parent or type(parent) != praw.objects.Comment:
         return False
     return is_comment_owner(parent, username)
-
-
-def is_transcript_reply(praw_r, praw_comment, username):
-    if not hasattr(praw_comment, 'parent_id'):
-        return False
-    parent = praw_r.get_info(thing_id=praw_comment.parent_id)
-    if not parent or type(parent) != praw.objects.Comment:
-        return False
-    return len(parent.body) > 50 and is_comment_owner(parent, username)

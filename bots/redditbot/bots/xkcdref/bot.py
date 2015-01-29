@@ -3,6 +3,7 @@ import time
 import logging
 import random
 
+import praw
 import snudown
 from bs4 import BeautifulSoup
 
@@ -108,7 +109,7 @@ class MailXkcdBot(MailTriggeredBot):
             return True
 
         # Check it was originally a reply to a transcript
-        if not utils.is_transcript_reply(self.r, mail, self.auth['username']):
+        if not self._is_transcript_reply(self.r, mail, self.auth['username']):
             logger.info('Skipping to post joke reply to {id}. Reason: Not a reply to a transcript'.format(id=mail.id))
             return True
 
@@ -116,6 +117,15 @@ class MailXkcdBot(MailTriggeredBot):
         if utils.send_reply(mail, reply_msg):
             return True
         return False
+
+    def _is_transcript_reply(self, praw_r, praw_comment, username):
+        if not hasattr(praw_comment, 'parent_id'):
+            return False
+
+        parent = praw_r.get_info(thing_id=praw_comment.parent_id)
+        if not parent or type(parent) != praw.objects.Comment:
+            return False
+        return len(parent.body) > 50 and utils.is_comment_owner(parent, username)
 
 
 class VoteXkcdBot(UserCommentsVoteTriggeredBot):

@@ -7,7 +7,7 @@ import logging
 from bot import TopEmotesBot
 import redditbot.bots.settings as settings
 
-logging.basicConfig()
+logging.basicConfig(level=logging.INFO)
 
 
 def run():
