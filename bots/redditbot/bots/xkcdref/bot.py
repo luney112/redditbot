@@ -226,15 +226,13 @@ class CommentXkcdBot(SubredditCommentTriggeredBot):
             if ref['href'].find('imgs.xkcd.com') != -1 or data.get('from_external') is True:
                 reply_msg_body += u'[Original Source](http://xkcd.com/{num}/)\n\n'.format(num=comic_id)
             elif data.get('img'):
-                reply_msg_body += u'[Image]({image})\n\n'.format(
-                    image=data.get('img').replace('(', '\\(').replace(')', '\\)'))
+                reply_msg_body += u'[Image]({image})\n\n'.format(image=self._format_url(data.get('img')))
             if data.get('link'):
-                reply_msg_body += u'[Link]({link})\n\n'.format(
-                    link=data.get('link').replace('(', '\\(').replace(')', '\\)'))
+                reply_msg_body += u'[Link]({link})\n\n'.format(link=self._format_url(data.get('link')))
             if data.get('title'):
-                reply_msg_body += u'**Title:** {title}\n\n'.format(title=data.get('title', '').replace('\n', '\n\n'))
+                reply_msg_body += u'**Title:** {title}\n\n'.format(title=self._format_text(data.get('title', '')))
             if data.get('alt'):
-                reply_msg_body += u'**Title-text:** {alt}\n\n'.format(alt=data.get('alt', '').replace('\n', '\n\n'))
+                reply_msg_body += u'**Title-text:** {alt}\n\n'.format(alt=self._format_text(data.get('alt', '')))
             if comic_id > 0:
                 explained = self.xkcd_fetcher.get_explained_link(comic_id)
                 reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
@@ -262,6 +260,14 @@ class CommentXkcdBot(SubredditCommentTriggeredBot):
             return False
 
         return True
+
+    def _format_url(self, url):
+        return url.replace('(', '\\(').replace(')', '\\)')
+
+    def _format_text(self, text):
+        if isinstance(text, unicode):
+            text = text.encode('raw_unicode_escape').decode('utf-8')
+        return text.replace('\n', '\n\n')
 
 
 class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
@@ -380,18 +386,16 @@ class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
             if ref['href'].find('imgs.xkcd.com') != -1 or data.get('from_external') is True:
                 reply_msg_body += u'[Original Source](http://xkcd.com/{num}/)\n\n'.format(num=comic_id)
             elif data.get('img'):
-                reply_msg_body += u'[Image]({image})\n\n'.format(
-                    image=data.get('img').replace('(', '\\(').replace(')', '\\)'))
+                reply_msg_body += u'[Image]({image})\n\n'.format(image=self._format_url(data.get('img')))
             if data.get('link'):
-                reply_msg_body += u'[Link]({link})\n\n'.format(
-                    link=data.get('link').replace('(', '\\(').replace(')', '\\)'))
+                reply_msg_body += u'[Link]({link})\n\n'.format(link=self._format_url(data.get('link')))
             if data.get('title'):
-                reply_msg_body += u'**Title:** {title}\n\n'.format(title=data.get('title', '').replace('\n', '\n\n'))
+                reply_msg_body += u'**Title:** {title}\n\n'.format(title=self._format_text(data.get('title', '')))
             if data.get('transcript'):
                 reply_msg_body += u'**Transcript:** {transcript}\n\n'.format(
-                    transcript=re.sub('\n{{.+}}', '', data.get('transcript', '')).replace('\n', '\n\n'))
+                    transcript=self._format_text(re.sub('\n{{.+}}', '', data.get('transcript', ''))))
             if data.get('alt'):
-                reply_msg_body += u'**Title-text:** {alt}\n\n'.format(alt=data.get('alt', '').replace('\n', '\n\n'))
+                reply_msg_body += u'**Title-text:** {alt}\n\n'.format(alt=self._format_text(data.get('alt', '')))
             if comic_id > 0:
                 explained = self.xkcd_fetcher.get_explained_link(comic_id)
                 reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
@@ -419,3 +423,11 @@ class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
             return False
 
         return True
+
+    def _format_url(self, url):
+        return url.replace('(', '\\(').replace(')', '\\)')
+
+    def _format_text(self, text):
+        if isinstance(text, unicode):
+            text = text.encode('raw_unicode_escape').decode('utf-8')
+        return text.replace('\n', '\n\n')
