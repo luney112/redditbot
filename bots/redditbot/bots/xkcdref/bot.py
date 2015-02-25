@@ -197,77 +197,25 @@ class CommentXkcdBot(SubredditCommentTriggeredBot):
         return self.send_reply(comment, refs)
 
     def send_reply(self, comment, refs):
-        # Check for secret message
-        secret_message = ''
-        matches = re.finditer(FULL_EMOTE_REGEX, comment.body)
-        if matches:
-            for match in matches:
-                d = match.groupdict()
-                if d['message'] and d['message'].find('xkcd_transcriber') != -1:
-                    secret_message = "Hello, " + comment.author.name if comment.author else "[deleted]"
-                    break
-
-        # Secret emote
-        secret_emote = ''
-        if comment.subreddit.display_name.lower() in PONY_SUBS or secret_message:
-            secret_emote = random.choice(PONY_SECRETS) % secret_message + ' '
-
-        # Start building the message
-        reply_msg_head = secret_emote
-        reply_msg_sig = '---\n' + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS])
-        reply_msg_body = ''
-
-        # Build body text
-        for comic_id, ref in refs.iteritems():
-            data = ref['data']
-            if reply_msg_body != '':
-                reply_msg_body += u'----\n'
-
-            if ref['href'].find('imgs.xkcd.com') != -1 or data.get('from_external') is True:
-                reply_msg_body += u'[Original Source](http://xkcd.com/{num}/)\n\n'.format(num=comic_id)
-            elif data.get('img'):
-                reply_msg_body += u'[Image]({image})\n\n'.format(image=self._format_url(data.get('img')))
-            if data.get('link'):
-                reply_msg_body += u'[Link]({link})\n\n'.format(link=self._format_url(data.get('link')))
-            if data.get('title'):
-                reply_msg_body += u'**Title:** {title}\n\n'.format(title=self._format_text(data.get('title', '')))
-            if data.get('alt'):
-                reply_msg_body += u'**Title-text:** {alt}\n\n'.format(alt=self._format_text(data.get('alt', '')))
-            if comic_id > 0:
-                explained = self.xkcd_fetcher.get_explained_link(comic_id)
-                reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
-
-            stats = self.datastore.get_stats(comic_id)
-            if stats:
-                plural = 's' if stats['count'] != 1 else ''
-                reply_msg_body += u'**Stats:** This comic has been referenced {0} time{1}, representing {2:.4f}% of referenced xkcds.\n\n'.format(
-                    stats['count'], plural, stats['percentage'])
+        builder = ReferenceBuilder()
+        reply_msg = builder.build_all(comment, refs, self.xkcd_fetcher, self.datastore, None)
 
         # Do not send if there's no body
-        if len(reply_msg_body.strip()) == 0:
+        if builder.get_body_length() == 0:
             return True
 
         # Reply to the user
-        reply_msg = reply_msg_head + reply_msg_body + reply_msg_sig
         reply_obj = utils.send_reply(comment, reply_msg)
         if reply_obj is None:
             return False
 
         # Edit and fix [delete] signature link
-        reply_msg_sig = '---\n' + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS]).format(thing_id=reply_obj.name)
-        reply_msg = reply_msg_head + reply_msg_body + reply_msg_sig
+        builder.build_signature(reply_obj)
+        reply_msg = builder.cat()
         if not utils.edit_reply(reply_obj, reply_msg):
             return False
 
         return True
-
-    def _format_url(self, url):
-        return url.replace('(', '\\(').replace(')', '\\)')
-
-    def _format_text(self, text):
-        if isinstance(text, unicode):
-            text = text.encode('raw_unicode_escape').decode('utf-8')
-        return text.replace('\n', '\n\n')
 
 
 class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
@@ -357,72 +305,103 @@ class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
         return self.send_reply(submission, refs)
 
     def send_reply(self, submission, refs):
-        # Check for secret message
-        secret_message = ''
-        matches = re.finditer(FULL_EMOTE_REGEX, getattr(submission, 'selftext', ''))
-        if matches:
-            for match in matches:
-                d = match.groupdict()
-                if d['message'] and d['message'].find('xkcd_transcriber') != -1:
-                    secret_message = "Hello, " + submission.author.name if submission.author else "[deleted]"
-                    break
-
-        # Secret emote
-        secret_emote = ''
-        if submission.subreddit.display_name.lower() in PONY_SUBS or secret_message:
-            secret_emote = random.choice(PONY_SECRETS) % secret_message + ' '
-
-        # Start building the message
-        reply_msg_head = secret_emote
-        reply_msg_sig = '---\n' + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS])
-        reply_msg_body = ''
-
-        # Build body text
-        for comic_id, ref in refs.iteritems():
-            data = ref['data']
-            if reply_msg_body != '':
-                reply_msg_body += u'----\n'
-
-            if ref['href'].find('imgs.xkcd.com') != -1 or data.get('from_external') is True:
-                reply_msg_body += u'[Original Source](http://xkcd.com/{num}/)\n\n'.format(num=comic_id)
-            elif data.get('img'):
-                reply_msg_body += u'[Image]({image})\n\n'.format(image=self._format_url(data.get('img')))
-            if data.get('link'):
-                reply_msg_body += u'[Link]({link})\n\n'.format(link=self._format_url(data.get('link')))
-            if data.get('title'):
-                reply_msg_body += u'**Title:** {title}\n\n'.format(title=self._format_text(data.get('title', '')))
-            if data.get('transcript'):
-                reply_msg_body += u'**Transcript:** {transcript}\n\n'.format(
-                    transcript=self._format_text(re.sub('\n{{.+}}', '', data.get('transcript', ''))))
-            if data.get('alt'):
-                reply_msg_body += u'**Title-text:** {alt}\n\n'.format(alt=self._format_text(data.get('alt', '')))
-            if comic_id > 0:
-                explained = self.xkcd_fetcher.get_explained_link(comic_id)
-                reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
-
-            stats = self.datastore.get_stats(comic_id)
-            if stats:
-                plural = 's' if stats['count'] != 1 else ''
-                reply_msg_body += u'**Stats:** This comic has been referenced {0} time{1}, representing {2:.4f}% of referenced xkcds.\n\n'.format(
-                    stats['count'], plural, stats['percentage'])
+        builder = ReferenceBuilder(include_transcript=True)
+        reply_msg = builder.build_all(submission, refs, self.xkcd_fetcher, self.datastore, None)
 
         # Do not send if there's no body
-        if len(reply_msg_body.strip()) == 0:
+        if builder.get_body_length() == 0:
             return True
 
         # Reply to the user
-        reply_msg = reply_msg_head + reply_msg_body + reply_msg_sig
         reply_obj = utils.send_reply(submission, reply_msg)
         if reply_obj is None:
             return False
 
         # Edit and fix [delete] signature link
-        reply_msg_sig = '---\n' + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS]).format(thing_id=reply_obj.name)
-        reply_msg = reply_msg_head + reply_msg_body + reply_msg_sig
+        builder.build_signature(reply_obj)
+        reply_msg = builder.cat()
         if not utils.edit_reply(reply_obj, reply_msg):
             return False
 
         return True
+
+
+class ReferenceBuilder(object):
+    def __init__(self, include_transcript=False):
+        self.include_transcript = include_transcript
+        self.reply_msg_head = ''
+        self.reply_msg_sig = ''
+        self.reply_msg_body = ''
+
+    def build_head(self, comment):
+        # Check for secret message
+        secret_message = ''
+        matches = re.finditer(FULL_EMOTE_REGEX, comment.body)
+        if matches:
+            for match in matches:
+                d = match.groupdict()
+                if d['message'] and d['message'].find('xkcd_transcriber') != -1:
+                    secret_message = "Hello, " + comment.author.name if comment.author else "[deleted]"
+                    break
+
+        # Secret emote
+        secret_emote = ''
+        if comment.subreddit.display_name.lower() in PONY_SUBS or secret_message:
+            secret_emote = random.choice(PONY_SECRETS) % secret_message + ' '
+
+        self.reply_msg_head = secret_emote
+
+    def build_signature(self, reply_obj):
+        if reply_obj is None:
+            self.reply_msg_sig = '---\n' + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS])
+        else:
+            self.reply_msg_sig = '---\n' + ' ^| '.join(['^' + a for a in XKCD_SIG_LINKS]).format(
+                thing_id=reply_obj.name)
+
+    def build_body(self, refs, xkcd_fetcher, datastore):
+        # Reset
+        self.reply_msg_body = ''
+
+        # Build body text
+        for comic_id, ref in refs.iteritems():
+            data = ref['data']
+            if self.reply_msg_body != '':
+                self.reply_msg_body += u'----\n'
+
+            if ref['href'].find('imgs.xkcd.com') != -1 or data.get('from_external') is True:
+                self.reply_msg_body += u'[Original Source](http://xkcd.com/{num}/)\n\n'.format(num=comic_id)
+            elif data.get('img'):
+                self.reply_msg_body += u'[Image]({image})\n\n'.format(image=self._format_url(data.get('img')))
+            if data.get('link'):
+                self.reply_msg_body += u'[Link]({link})\n\n'.format(link=self._format_url(data.get('link')))
+            if data.get('title'):
+                self.reply_msg_body += u'**Title:** {title}\n\n'.format(title=self._format_text(data.get('title', '')))
+            if data.get('transcript') and self.include_transcript:
+                self.reply_msg_body += u'**Transcript:** {transcript}\n\n'.format(
+                    transcript=self._format_text(re.sub('\n{{.+}}', '', data.get('transcript', ''))))
+            if data.get('alt'):
+                self.reply_msg_body += u'**Title-text:** {alt}\n\n'.format(alt=self._format_text(data.get('alt', '')))
+            if comic_id > 0:
+                explained = xkcd_fetcher.get_explained_link(comic_id)
+                self.reply_msg_body += u'[Comic Explanation]({link})\n\n'.format(link=explained)
+
+            stats = datastore.get_stats(comic_id)
+            if stats:
+                plural = 's' if stats['count'] != 1 else ''
+                self.reply_msg_body += u'**Stats:** This comic has been referenced {0} time{1}, representing {2:.4f}% of referenced xkcds.\n\n'.format(
+                    stats['count'], plural, stats['percentage'])
+
+    def build_all(self, comment, refs, xkcd_fetcher, datastore, reply_obj):
+        self.build_head(comment)
+        self.build_body(refs, xkcd_fetcher, datastore)
+        self.build_signature(reply_obj)
+        return self.cat()
+
+    def cat(self):
+        return self.reply_msg_head + self.reply_msg_body + self.reply_msg_sig
+
+    def get_body_length(self):
+        return len(self.reply_msg_body)
 
     def _format_url(self, url):
         return url.replace('(', '\\(').replace(')', '\\)')
