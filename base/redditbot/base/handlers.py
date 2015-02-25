@@ -27,12 +27,13 @@ class MultiBotHandler(object):
 
 
 class BotHandler(object):
-    def __init__(self, user_agent, auth, delay, fetch_limit, cache_size=0):
+    def __init__(self, user_agent, auth, delay, fetch_limit, cache_size=0, dry_run=False):
         self.user_agent = user_agent
         self.auth = auth
         self.delay = delay
         self.fetch_limit = fetch_limit
         self.cache_size = cache_size
+        self.dry_run = dry_run
         self.cache = pylru.lrucache(self.cache_size) if self.cache_size > 0 else None
         self.api_request_delay = 1.0 if self.__is_oauth() else 2.0
         self.r = praw.Reddit(self.user_agent, cache_timeout=0, api_request_delay=self.api_request_delay)

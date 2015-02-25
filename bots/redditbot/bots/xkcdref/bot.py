@@ -60,16 +60,22 @@ class MailXkcdBot(MailTriggeredBot):
         elif self.is_comment_reply(mail):
             result = self.process_comment_reply(mail)
 
-        if result:
+        if result and not self.dry_run:
             mail.mark_as_read()
         return result
 
     def process_ignore(self, mail):
         # Add to ignore list
-        self.datastore.add_ignore(mail.author.name.lower())
+        if not self.dry_run:
+            self.datastore.add_ignore(mail.author.name.lower())
 
         # Reply to the user
         reply_msg = "You have been added to the ignore list. If this bot continues to respond, PM /u/LunarMist2."
+
+        # Do not send if we are doing a dry run
+        if self.dry_run:
+            return True
+
         if utils.send_reply(mail, reply_msg):
             return True
         return False
@@ -83,7 +89,8 @@ class MailXkcdBot(MailTriggeredBot):
             if obj:
                 parent = self.r.get_info(thing_id=obj.parent_id)
                 if parent and parent.author and parent.author.name == mail.author.name:
-                    obj.delete()
+                    if not self.dry_run:
+                        obj.delete()
                     logger.info(' => Comment Deleted!')
 
         return True
@@ -113,6 +120,10 @@ class MailXkcdBot(MailTriggeredBot):
             logger.info('Skipping to post joke reply to {id}. Reason: Not a reply to a transcript'.format(id=mail.id))
             return True
 
+        # Do not send if we are doing a dry run
+        if self.dry_run:
+            return True
+
         # Reply to the user
         if utils.send_reply(mail, reply_msg):
             return True
@@ -131,7 +142,8 @@ class MailXkcdBot(MailTriggeredBot):
 class VoteXkcdBot(UserCommentsVoteTriggeredBot):
     def _do(self, comment):
         logger.info('Comment {id} below score threshold: {score}. Removing'.format(id=comment.id, score=comment.score))
-        comment.delete()
+        if not self.dry_run:
+            comment.delete()
         return True
 
 
@@ -181,7 +193,7 @@ class CommentXkcdBot(SubredditCommentTriggeredBot):
 
         # Record in db the references
         for comic_id, ref in refs.iteritems():
-            if comic_id > 0:
+            if comic_id > 0 and not self.dry_run:
                 timestamp = int(time.time())
                 author = comment.author.name if comment.author else '[deleted]'
                 sub = comment.subreddit.display_name
@@ -202,6 +214,10 @@ class CommentXkcdBot(SubredditCommentTriggeredBot):
 
         # Do not send if there's no body
         if builder.get_body_length() == 0:
+            return True
+
+        # Do not send if we are doing a dry run
+        if self.dry_run:
             return True
 
         # Reply to the user
@@ -289,7 +305,7 @@ class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
 
         # Record in db the references
         for comic_id, ref in refs.iteritems():
-            if comic_id > 0:
+            if comic_id > 0 and not self.dry_run:
                 timestamp = int(time.time())
                 author = submission.author.name if submission.author else '[deleted]'
                 sub = submission.subreddit.display_name
@@ -310,6 +326,10 @@ class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
 
         # Do not send if there's no body
         if builder.get_body_length() == 0:
+            return True
+
+        # Do not send if we are doing a dry run
+        if self.dry_run:
             return True
 
         # Reply to the user

@@ -23,6 +23,7 @@ def run():
                                        delay=20,
                                        fetch_limit=300,
                                        cache_size=600,
+                                       dry_run=settings.DRY_RUN,
                                        subreddit='all',
                                        datastore=datastore,
                                        xkcd_fetcher=xkcd_fetcher)
@@ -32,6 +33,7 @@ def run():
                                  delay=15,
                                  fetch_limit=None,
                                  cache_size=2000,
+                                 dry_run=settings.DRY_RUN,
                                  subreddit='all',
                                  datastore=datastore,
                                  xkcd_fetcher=xkcd_fetcher)
@@ -41,6 +43,7 @@ def run():
                            delay=60,
                            fetch_limit=None,
                            cache_size=0,
+                           dry_run=settings.DRY_RUN,
                            datastore=datastore,
                            xkcd_fetcher=xkcd_fetcher)
 
@@ -49,6 +52,7 @@ def run():
                            delay=300,
                            fetch_limit=None,
                            cache_size=0,
+                           dry_run=settings.DRY_RUN,
                            monitored_user='xkcd_transcriber',
                            score_threshold_min=-1)
 
