@@ -1,11 +1,9 @@
-import os
 import urllib2
 import re
 import logging
 import urlparse
 
-import simplejson as json
-
+import simplejson
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -113,7 +111,7 @@ class XkcdFetcher(object):
         try:
             response = urllib2.urlopen(XKCD_JSON_API_URL.format(comic_id=comic_id))
             html = response.read()
-            return json.loads(html)
+            return simplejson.loads(html)
         except Exception as e:
-            #logger.exception('Exception while getting xkcd json')
+            # logger.exception('Exception while getting xkcd json')
             return None

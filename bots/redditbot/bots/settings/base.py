@@ -16,8 +16,3 @@ AUTHOR = '/u/name_here'
 XKCD_DB_LOCATION = '/path/to/db'
 
 DRY_RUN = False
-
-try:
-    from local_settings import *
-except ImportError as e:
-    pass

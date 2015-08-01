@@ -1,5 +1,5 @@
 from redditbot.base.handlers import MailTriggeredBot
-import redditbot.base.utils as utils
+from redditbot.base import utils
 
 
 class TopEmotesBot(MailTriggeredBot):

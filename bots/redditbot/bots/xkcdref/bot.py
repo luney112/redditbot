@@ -7,7 +7,7 @@ import praw
 import snudown
 from bs4 import BeautifulSoup
 
-import redditbot.base.utils as utils
+from redditbot.base import utils
 from redditbot.base.handlers import MailTriggeredBot, UserCommentsVoteTriggeredBot, SubredditCommentTriggeredBot, \
     SubredditSubmissionTriggeredBot
 

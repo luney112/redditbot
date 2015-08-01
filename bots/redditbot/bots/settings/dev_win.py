@@ -1,0 +1,2 @@
+XKCD_DB_LOCATION = ''
+DRY_RUN = True

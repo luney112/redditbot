@@ -5,7 +5,7 @@ patch_all()
 import logging
 
 from bot import TopEmotesBot
-import redditbot.bots.settings as settings
+from redditbot.bots import settings
 
 logging.basicConfig()
 

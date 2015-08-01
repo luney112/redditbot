@@ -41,10 +41,8 @@ class BotDataStore(object):
         self.create()
 
     def create(self):
-        # TODO: Remove id field
         self.datastore.execute("""
-            CREATE TABLE IF NOT EXISTS stats_ignore (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+            CREATE TABLE IF NOT EXISTS ignored_users (
                 bot_name TEXT,
                 target_name TEXT,
                 UNIQUE(bot_name, target_name) ON CONFLICT IGNORE
@@ -52,21 +50,21 @@ class BotDataStore(object):
             """)
 
         self.datastore.execute("""
-            CREATE TABLE IF NOT EXISTS stats_xkcd_event (
-                id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-                comic_id INTEGER NOT NULL,
+            CREATE TABLE IF NOT EXISTS xkcd_comic_references (
+                comic_id INTEGER,
                 time INTEGER NOT NULL,
                 subreddit TEXT,
                 user TEXT,
                 link TEXT,
-                from_external BOOLEAN
+                UNIQUE(comic_id, time, subreddit, user, link) ON CONFLICT IGNORE
             );
             """)
 
         self.datastore.execute("""
-            CREATE TABLE IF NOT EXISTS stats_xkcd_meta (
-                id INTEGER PRIMARY KEY,
+            CREATE TABLE IF NOT EXISTS xkcd_comic_meta (
+                comic_id INTEGER PRIMARY KEY,
                 json TEXT,
+                title TEXT,
                 hash_avg TEXT,
                 hash_d TEXT,
                 hash_p TEXT
@@ -74,13 +72,23 @@ class BotDataStore(object):
             """)
 
         self.datastore.execute("""
-            CREATE VIEW IF NOT EXISTS stats_xkcd_stats AS
+            CREATE VIEW IF NOT EXISTS references_counts AS
                 SELECT
                     comic_id,
-                    COUNT(*) as count,
-                    (COUNT(*) * 100.0) / (SELECT COUNT(*) FROM stats_xkcd_event) AS percentage
+                    0 AS comic_count,
+                    0.0 AS comic_percentage
                 FROM
-                    stats_xkcd_event
+                    xkcd_comic_meta
+                WHERE comic_id NOT IN (
+                    SELECT DISTINCT(comic_id) FROM xkcd_comic_references
+                )
+                UNION
+                SELECT
+                    comic_id,
+                    COUNT(*) AS comic_count,
+                    (COUNT(*) * 100.0) / (SELECT COUNT(*) FROM xkcd_comic_references) AS comic_percentage
+                FROM
+                    xkcd_comic_references
                 GROUP BY
                     comic_id
             ;
@@ -89,9 +97,8 @@ class BotDataStore(object):
         self.datastore.commit()
 
     def add_ignore(self, target):
-        # TODO: Remove id field
         self.datastore.execute(
-            'INSERT INTO stats_ignore VALUES(null, ?, ?)',
+            'INSERT INTO ignored_users VALUES(?, ?)',
             (self.bot_name, target)
         )
 
@@ -99,7 +106,7 @@ class BotDataStore(object):
 
     def get_ignores(self):
         cursor = self.datastore.execute(
-            'SELECT target_name FROM stats_ignore WHERE bot_name = ?',
+            'SELECT target_name FROM ignored_users WHERE bot_name = ?',
             (self.bot_name,)
         )
 
@@ -107,7 +114,7 @@ class BotDataStore(object):
 
     def get_stats(self, comic_id):
         cursor = self.datastore.execute(
-            'SELECT count, percentage FROM stats_xkcd_stats WHERE comic_id = ?',
+            'SELECT comic_count, comic_percentage FROM references_counts WHERE comic_id = ?',
             (int(comic_id),)
         )
 
@@ -121,15 +128,15 @@ class BotDataStore(object):
 
     def insert_xkcd_event(self, comic_id, time, subreddit, user, link, from_external):
         self.datastore.execute(
-            'INSERT INTO stats_xkcd_event VALUES(null, ?, ?, ?, ?, ?, ?)',
-            (int(comic_id), int(time), subreddit, user, link, from_external)
+            'INSERT INTO xkcd_comic_references VALUES(?, ?, ?, ?, ?)',
+            (int(comic_id), int(time), subreddit, user, link)
         )
 
         self.datastore.commit()
 
     def get_xkcd_meta(self, comic_id):
         cursor = self.datastore.execute(
-            'SELECT id, json, hash_avg, hash_d, hash_p FROM stats_xkcd_meta WHERE id = ?',
+            'SELECT comic_id, json, hash_avg, hash_d, hash_p FROM xkcd_comic_meta WHERE comic_id = ?',
             (int(comic_id),)
         )
 
@@ -146,14 +153,14 @@ class BotDataStore(object):
 
     def insert_xkcd_meta(self, comic_id, json, hash_avg, hash_d, hash_p):
         r = self.datastore.execute(
-            'SELECT 1 FROM stats_xkcd_meta WHERE id = ?',
+            'SELECT 1 FROM xkcd_comic_meta WHERE comic_id = ?',
             (int(comic_id),)
         )
 
         if r.fetchone() is None:
             self.datastore.execute(
-                'INSERT INTO stats_xkcd_meta VALUES(?, ?, ?, ?, ?)',
-                (int(comic_id), simplejson.dumps(json), str(hash_avg), str(hash_d), str(hash_p))
+                'INSERT INTO xkcd_comic_meta VALUES(?, ?, ?, ?, ?, ?)',
+                (int(comic_id), simplejson.dumps(json), json.get('title', ''), str(hash_avg), str(hash_d), str(hash_p))
             )
 
             self.datastore.commit()
