@@ -56,7 +56,7 @@ class BotDataStore(object):
                 subreddit TEXT,
                 user TEXT,
                 link TEXT,
-                UNIQUE(comic_id, time, subreddit, user, link) ON CONFLICT IGNORE
+                UNIQUE(comic_id, subreddit, user, link) ON CONFLICT IGNORE
             );
             """)
 
