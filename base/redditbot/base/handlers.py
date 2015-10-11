@@ -11,8 +11,27 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 OAUTH_ACCESS_TOKEN_URL = 'https://www.reddit.com/api/v1/access_token'
-OAUTH_SCOPES = {'edit', 'identity', 'modconfig', 'modflair', 'modlog', 'modposts',
-                'mysubreddits', 'privatemessages', 'read', 'submit', 'subscribe', 'vote'}
+OAUTH_SCOPES = {
+    'identity',
+    'edit',
+    'flair',
+    'history',
+    'modconfig',
+    'modflair',
+    'modlog',
+    'modposts',
+    'modwiki',
+    'mysubreddits',
+    'privatemessages',
+    'read',
+    'report',
+    'save',
+    'submit',
+    'subscribe',
+    'vote',
+    'wikiedit',
+    'wikiread',
+}
 
 
 class MultiBotHandler(object):
