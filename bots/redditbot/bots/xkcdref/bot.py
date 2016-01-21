@@ -394,6 +394,7 @@ class ReferenceBuilder(object):
                 self.reply_msg_body += u'[Image]({image})\n\n'.format(image=self._format_url(data.get('img')))
             if data.get('link'):
                 self.reply_msg_body += u'[Link]({link})\n\n'.format(link=self._format_url(data.get('link')))
+            self.reply_msg_body += u'[Mobile](http://m.xkcd.com/{num}/)\n\n'.format(num=comic_id)
             if data.get('title'):
                 self.reply_msg_body += u'**Title:** {title}\n\n'.format(title=self._format_text(data.get('title', '')))
             if data.get('transcript') and self.include_transcript:
