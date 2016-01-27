@@ -356,7 +356,9 @@ class ReferenceBuilder(object):
     def build_head(self, comment):
         # Check for secret message
         secret_message = ''
-        matches = re.finditer(FULL_EMOTE_REGEX, comment.body)
+        # Only check for if there's a block of text to process
+        text = getattr(comment, 'body', getattr(comment, 'selftext', ''))
+        matches = re.finditer(FULL_EMOTE_REGEX, text)
         if matches:
             for match in matches:
                 d = match.groupdict()
