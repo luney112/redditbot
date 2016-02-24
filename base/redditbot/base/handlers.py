@@ -11,27 +11,6 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 OAUTH_ACCESS_TOKEN_URL = 'https://www.reddit.com/api/v1/access_token'
-OAUTH_SCOPES = {
-    'identity',
-    'edit',
-    'flair',
-    'history',
-    'modconfig',
-    'modflair',
-    'modlog',
-    'modposts',
-    'modwiki',
-    'mysubreddits',
-    'privatemessages',
-    'read',
-    'report',
-    'save',
-    'submit',
-    'subscribe',
-    'vote',
-    'wikiedit',
-    'wikiread',
-}
 
 
 class MultiBotHandler(object):
@@ -93,7 +72,8 @@ class BotHandler(object):
         if 'error' in response:
             logger.error('Could not retrieve access creds: Json error: {status}'.format(status=response['error']))
         else:
-            self.r.set_access_credentials(scope=OAUTH_SCOPES, access_token=response['access_token'])
+            print 'setting access creds for oauth'
+            self.r.set_access_credentials(scope='*', access_token=response['access_token'])
             self.expires = time.time() + int(response['expires_in']) * 0.9
 
     def __auth(self):

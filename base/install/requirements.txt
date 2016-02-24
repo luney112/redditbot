@@ -1,4 +1,4 @@
 gevent>=1.0.2
-praw>=2.1.19
+praw>=3.4.0
 pylru>=1.0.6
 requests>=2.5.1
