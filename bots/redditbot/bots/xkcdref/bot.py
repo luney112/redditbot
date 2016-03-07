@@ -33,6 +33,8 @@ XKCD_SIG_LINKS = [
     u'[Delete](%s)' % REDDIT_PM_DELETE
 ]
 
+MARKDOWN_ESCAPE_CHARACTERS = "\\`*_{}[]()#+-.!:|&<>/^~"
+
 
 class MailXkcdBot(MailTriggeredBot):
     def __init__(self, *args, **kwargs):
@@ -432,4 +434,11 @@ class ReferenceBuilder(object):
     def _format_text(self, text):
         if isinstance(text, unicode):
             text = text.encode('raw_unicode_escape').decode('utf-8')
-        return text.replace('\n', '\n\n')
+        lines = text.replace('\n', '\n\n')
+        lines = _escape_markdown(lines)
+        return lines
+
+    def _escape_markdown(self, text):
+        for c in MARKDOWN_ESCAPE_CHARACTERS:
+            text = text.replace(str(c), '\\' + str(c))
+        return text
