@@ -19,15 +19,15 @@ FULL_EMOTE_REGEX = re.compile(
 PONY_SUBS = ["mylittlepony", "mlplounge", "ploungeafterdark", "mylittlefriends", "mylittleandysonic1"]
 PONY_SECRETS = [u'[](/adorkable "%s")', u'[](/twibook "%s")', u'[](/twicookiejar "%s")', u'[](/twicookie "%s")']
 
-REDDIT_PM_IGNORE = "http://reddit.com/message/compose/?to=xkcd_transcriber&subject=ignore%20me&message=ignore%20me"
-REDDIT_PM_DELETE = "http://reddit.com/message/compose/?to=xkcd_transcriber&subject=delete&message=delete%20{thing_id}"
+REDDIT_PM_IGNORE = "https://reddit.com/message/compose/?to=xkcd_transcriber&subject=ignore%20me&message=ignore%20me"
+REDDIT_PM_DELETE = "https://reddit.com/message/compose/?to=xkcd_transcriber&subject=delete&message=delete%20{thing_id}"
 NO_BREAK_SPACE = u'\u00A0'
 MAX_MESSAGE_LENGTH = 10000
 
 XKCD_SIG_LINKS = [
-    u'[xkcd.com](http://www.xkcd.com)',
-    u'[xkcd%ssub](http://www.reddit.com/r/xkcd/)' % NO_BREAK_SPACE,
-    u'[Problems/Bugs?](http://www.reddit.com/r/xkcd_transcriber/)',
+    u'[xkcd.com](https://www.xkcd.com)',
+    u'[xkcd%ssub](https://www.reddit.com/r/xkcd/)' % NO_BREAK_SPACE,
+    u'[Problems/Bugs?](https://www.reddit.com/r/xkcd_transcriber/)',
     u'[Statistics](http://xkcdref.info/statistics/)',
     u'[Stop%sReplying](%s)' % (NO_BREAK_SPACE, REDDIT_PM_IGNORE),
     u'[Delete](%s)' % REDDIT_PM_DELETE
@@ -391,12 +391,12 @@ class ReferenceBuilder(object):
                 self.reply_msg_body += u'----\n'
 
             if ref['href'].find('imgs.xkcd.com') != -1 or data.get('from_external') is True:
-                self.reply_msg_body += u'[Original Source](http://xkcd.com/{num}/)\n\n'.format(num=comic_id)
+                self.reply_msg_body += u'[Original Source](https://xkcd.com/{num}/)\n\n'.format(num=comic_id)
             elif data.get('img'):
                 self.reply_msg_body += u'[Image]({image})\n\n'.format(image=self._format_url(data.get('img')))
             if data.get('link'):
                 self.reply_msg_body += u'[Link]({link})\n\n'.format(link=self._format_url(data.get('link')))
-            self.reply_msg_body += u'[Mobile](http://m.xkcd.com/{num}/)\n\n'.format(num=comic_id)
+            self.reply_msg_body += u'[Mobile](https://m.xkcd.com/{num}/)\n\n'.format(num=comic_id)
             if data.get('title'):
                 self.reply_msg_body += u'**Title:** {title}\n\n'.format(title=self._format_text(data.get('title', '')))
             if data.get('transcript') and self.include_transcript:

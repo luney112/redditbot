@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 XKCD_JSON_API_URL = 'http://xkcd.com/{comic_id}/info.0.json'
-XKCD_EXPLAINED_URL = 'http://www.explainxkcd.com/wiki/index.php/{comic_id}#Explanation'
+XKCD_EXPLAINED_URL = 'https://www.explainxkcd.com/wiki/index.php/{comic_id}#Explanation'
 
 
 class XkcdFetcher(object):
