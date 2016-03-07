@@ -323,7 +323,8 @@ class SubmissionXkcdBot(SubredditSubmissionTriggeredBot):
         return self.send_reply(submission, refs)
 
     def send_reply(self, submission, refs):
-        builder = ReferenceBuilder(include_transcript=True)
+        # TODO: Re-enable transcripts when the json has been fixed
+        builder = ReferenceBuilder(include_transcript=False)
         reply_msg = builder.build_all(submission, refs, self.xkcd_fetcher, self.datastore, None)
 
         # Do not send if there's no body
