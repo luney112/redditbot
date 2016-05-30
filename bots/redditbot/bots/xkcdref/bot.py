@@ -14,10 +14,43 @@ from redditbot.base.handlers import MailTriggeredBot, UserCommentsVoteTriggeredB
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+# Emote stuff
 FULL_EMOTE_REGEX = re.compile(
     """\[[^\]]*\]\s*\(\s*/(?P<name>[^\s/]+?)(?P<modifier>-\S+)?\s*(?P<message>["'].*?["'])?\s*\)""")
 PONY_SUBS = ["mylittlepony", "mlplounge", "ploungeafterdark", "mylittlefriends", "mylittleandysonic1"]
-PONY_SECRETS = [u'[](/adorkable "%s")', u'[](/twibook "%s")', u'[](/twicookiejar "%s")', u'[](/twicookie "%s")']
+PONY_SECRETS = [
+    u'[](/adorkable "%s")',
+    u'[](/twibook "%s")',
+    u'[](/twicookiejar "%s")',
+    u'[](/twicookie "%s")',
+    u'[](/pretzeltwi "%s")',
+    u'[](/twitongue "%s")',
+]
+SB_SECRETS = [
+    '[](/sbstalkthread)',
+    '[](/2d)',
+    '[](/sbload)',
+    '[](/sbtarget)',
+    '[](/sweetiecardbot)',
+]
+WISDOM_MESSAGES = [
+    "Beep boop.",
+    "0100100100100000011011000110100101101011011001010010000001110000011011110110111001111001",
+    "meow meow meow meow meow",
+    "Did you know that a group of cats is called a clowder?",
+    "Did you know that cats have over 20 muscles that control their ears?",
+    "Did you know that cats sleep 70% of their lives?",
+    "Did you know that owning a cat can reduce the risk of stroke and heart attack by a third?",
+    "Did you know that adult cats only meow to communicate with humans? meow.",
+    "Did you know that cats make more than 100 different sounds whereas dogs make around 10?",
+    "Did you know that cats have 1,000 times more data storage than an iPad?",
+    "Did you know that a house cat is faster than Usain Bolt?",
+    "Did you know that cats only sweat through their foot pads?",
+    "Did you know that cats have scent glands along their tail, their forehead, lips, chin, and the underside of their front paws?",
+    "Did you know that cat owners are 17% more likely to have a graduate degree?",
+    "Did you know that when your cat brings home a dead mouse or bird, it may do so to show you that you suck at hunting?",
+]
+
 
 REDDIT_PM_IGNORE = "https://reddit.com/message/compose/?to=xkcd_transcriber&subject=ignore%20me&message=ignore%20me"
 REDDIT_PM_DELETE = "https://reddit.com/message/compose/?to=xkcd_transcriber&subject=delete&message=delete%20{thing_id}"
@@ -78,9 +111,10 @@ class MailXkcdBot(MailTriggeredBot):
         if self.dry_run:
             return True
 
-        if utils.send_reply(mail, reply_msg):
-            return True
-        return False
+        #if utils.send_reply(mail, reply_msg):
+        #    return True
+        #return False
+        return True
 
     def process_delete(self, mail):
         # Ensure the mail author is the same as the original referencer
@@ -102,9 +136,9 @@ class MailXkcdBot(MailTriggeredBot):
 
         # Check for joke replies
         if body_lower.find('thank you') != -1 or body_lower.find('thanks') != -1:
-            reply_msg = "[](/sbstalkthread)My pleasure"
+            reply_msg = random.choice(SB_SECRETS) + "My pleasure"
         elif body_lower.find('i love you') != -1:
-            reply_msg = "[](/sbstalkthread)Love ya too~"
+            reply_msg = random.choice(SB_SECRETS) + "Love ya too~"
         elif body_lower == 'k':
             reply_msg = "[](/o_o)K"
         elif body_lower == ")":
@@ -366,7 +400,7 @@ class ReferenceBuilder(object):
             for match in matches:
                 d = match.groupdict()
                 if d['message'] and d['message'].find('xkcd_transcriber') != -1:
-                    secret_message = "Hello, " + comment.author.name if comment.author else "[deleted]"
+                    secret_message = self._get_secret_reply(comment.author)
                     break
 
         # Secret emote
@@ -375,6 +409,11 @@ class ReferenceBuilder(object):
             secret_emote = random.choice(PONY_SECRETS) % secret_message + ' '
 
         self.reply_msg_head = secret_emote
+
+    def _get_secret_reply(self, author):
+        greetings = "Hello, " + author.name if author else "[deleted]" + "."
+        wisdom = random.choice(WISDOM_MESSAGES)
+        return greetings + wisdom
 
     def build_signature(self, reply_obj):
         if reply_obj is None:
@@ -436,7 +475,7 @@ class ReferenceBuilder(object):
         if isinstance(text, unicode):
             text = text.encode('raw_unicode_escape').decode('utf-8')
         lines = text.replace('\n', '\n\n')
-        lines = _escape_markdown(lines)
+        lines = self._escape_markdown(lines)
         return lines
 
     def _escape_markdown(self, text):
